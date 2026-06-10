@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.venv/
+data/
+*.sqlite
+wallet.json
+debug.log
+.pytest_cache/
+.claude/
