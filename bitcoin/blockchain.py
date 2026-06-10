@@ -322,6 +322,10 @@ class Blockchain:
         for txhash_hex, rec in test_pool.items():
             self.db.write_tx_index(txhash_hex, rec["blockhash"], rec["txn"],
                                    rec["spent"])
+        # delete redundant memory transactions
+        if self.mempool is not None:
+            for tx in block.vtx[1:]:
+                self.mempool.remove(tx)
         for tx in block.vtx:
             for f in self.tx_listeners:
                 f(tx, pindex, True)
