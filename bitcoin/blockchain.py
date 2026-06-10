@@ -149,6 +149,17 @@ class Blockchain:
         block = self.load_block(pindex)
         return block.vtx[rec["txn"]], rec
 
+    def get_tx_depth(self, txhash: int) -> int:
+        """GetDepthInMainChain — 0 if not in a main-chain block."""
+        with self.lock:
+            rec = self.db.read_tx_index(uint256_to_hex(txhash))
+            if rec is None:
+                return 0
+            pindex = self.map_block_index.get(uint256_from_hex(rec["blockhash"]))
+            if pindex is None or not self.is_in_main_chain(pindex):
+                return 0
+            return self.best_height - pindex.n_height + 1
+
     # --------------------------------------------------------------- PoW
     def get_next_work_required(self, pindex_last: CBlockIndex | None) -> int:
         """GetNextWorkRequired, with the original nInterval-1 walk-back."""
