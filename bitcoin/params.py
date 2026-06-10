@@ -49,11 +49,11 @@ GENESIS_PUBKEY = bytes.fromhex(
     "b649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f"
 )  # Satoshi's genesis pubkey, reused as a tribute (output is unspendable for us)
 GENESIS_VERSION = 1
-GENESIS_TIME = 1781136000     # 2026-06-11 00:00:00 UTC
+GENESIS_TIME = 1780272000     # 2026-06-01 00:00:00 UTC
 GENESIS_BITS = 0x1F00FFFF     # PRIVATE-NET easy difficulty (~1 in 65k hashes)
-GENESIS_NONCE = 0             # filled in by tools/mine_genesis.py
-GENESIS_HASH = None           # filled in by tools/mine_genesis.py (hex string, big-endian)
-GENESIS_MERKLE_ROOT = None    # filled in by tools/mine_genesis.py
+GENESIS_NONCE = 7913
+GENESIS_HASH = "00001fce11f81d65c4044b674cfdae590a2a07a84716c0f59fe39afaf1dd033f"
+GENESIS_MERKLE_ROOT = "cb9c17630861bb550b2962e860b65c9be5d3e9297654f3a6f978cb0a3a871146"
 
 # block reward (main.cpp GetBlockValue)
 def block_value(height: int, fees: int) -> int:
