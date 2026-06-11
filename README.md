@@ -32,6 +32,10 @@ Coins** on A, and watch the payment appear 0/unconfirmed on B and confirm
 with the next block. `run_node.py` runs the same node headless; `-gen`
 starts mining immediately.
 
+想系统读懂源码？见中文导读
+**[docs/CODE_REVIEW_GUIDE.md](docs/CODE_REVIEW_GUIDE.md)** —— 按依赖顺序的
+7 站阅读路线，含关键函数讲解、与原版 C++ 的对照、动手实验和自检问题。
+
 ## What is faithfully replicated
 
 Verified against the actual v0.1.5 sources:
