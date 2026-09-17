@@ -1,9 +1,15 @@
 __pycache__/
 *.pyc
 .venv/
+.pytest_cache/
+.idea/
+.claude/
+
+# 节点运行时产生的数据（区块、索引、钱包、日志）
 data/
 *.sqlite
+*.sqlite-journal
+blk0001.dat
 wallet.json
+wallet.json.migrated
 debug.log
-.pytest_cache/
-.claude/

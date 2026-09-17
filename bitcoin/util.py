@@ -1,4 +1,4 @@
-"""Misc helpers — the small surviving subset of util.h/util.cpp."""
+"""杂项工具函数——原版 util.h / util.cpp 里我们用得到的那一小部分。"""
 
 import logging
 import os
@@ -9,56 +9,65 @@ from . import params
 
 
 def get_time() -> int:
-    """GetTime() — unix time as int64."""
+    """GetTime()：当前 Unix 时间戳（秒）。"""
     return int(time.time())
 
 
 def get_adjusted_time() -> int:
-    """GetAdjustedTime() — the original applied a median network offset;
-    on a localhost private net the clocks agree, so this is just GetTime()."""
+    """GetAdjustedTime()：原版会用各个对端报告的时间取中位数来校正本机时钟；
+    私网里所有节点都在同一台机器上，时钟天然一致，所以直接返回本机时间。"""
     return get_time()
 
 
-def format_money(n: int) -> str:
-    """FormatMoney() — satoshis to 'd.dd' string, trailing zeros trimmed
-    to cents like the original."""
-    sign = "-" if n < 0 else ""
-    n = abs(n)
-    whole, frac = divmod(n, params.COIN)
-    s = f"{whole}.{frac:08d}"
-    # original trims trailing zeros but always keeps two decimals
-    s = s.rstrip("0")
-    if s.endswith("."):
-        s += "00"
-    elif len(s.split(".")[1]) == 1:
-        s += "0"
-    return sign + s
+def format_money(n: int, f_plus: bool = False) -> str:
+    """FormatMoney()：把"聪"格式化成界面上显示的字符串。
+
+    忠实于原版：2009 年的界面只显示到"分"（两位小数，多余的精度直接截掉），
+    整数部分每三位加一个逗号，例如 1,234.50。
+    """
+    negative = n < 0
+    cents = abs(n) // params.CENT          # C++ 的整数除法向零取整，所以先取绝对值
+    s = f"{cents // 100:,}.{cents % 100:02d}"
+    if negative and cents > 0:
+        return "-" + s
+    if f_plus and cents > 0:
+        return "+" + s
+    return s
 
 
-def parse_money(s: str) -> int:
-    """ParseMoney() — 'd.dd' string to satoshis. Raises ValueError on junk."""
-    s = s.strip()
+def parse_money(text: str) -> int:
+    """ParseMoney()：把用户输入的金额字符串解析成"聪"。解析失败抛 ValueError。
+
+    忠实于原版的规则：整数部分可以带千位逗号，小数最多两位，前后可以有空白，
+    其他任何字符都算错误（所以 "1.234" 是非法的）。
+    """
+    s = text.strip()
     if not s:
-        raise ValueError("empty amount")
-    sign = 1
-    if s.startswith("-"):
-        sign, s = -1, s[1:]
-    if "." in s:
-        whole, _, frac = s.partition(".")
-        frac = (frac + "00000000")[:8]
-        if not (whole or frac):
-            raise ValueError("bad amount")
-        value = int(whole or "0") * params.COIN + int(frac or "0")
-    else:
-        value = int(s) * params.COIN
-    return sign * value
+        raise ValueError("金额为空")
+    whole, dot, frac = s.partition(".")
+    whole = whole.replace(",", "")
+    if whole == "" and frac == "":
+        raise ValueError("金额格式错误")
+    if whole and not whole.isdigit():
+        raise ValueError("金额格式错误")
+    if len(whole) > 14:
+        raise ValueError("金额过大")
+    if frac and (not frac.isdigit() or len(frac) > 2):
+        raise ValueError("金额最多两位小数")
+    cents = int((frac + "00")[:2]) if dot else 0
+    return (int(whole or "0") * 100 + cents) * params.CENT
 
 
 def setup_logging(datadir: str | None = None, name: str = "bitcoin") -> logging.Logger:
-    """debug.log in the datadir plus stdout, like OutputDebugStringF."""
+    """日志同时输出到屏幕和数据目录下的 debug.log（对应原版的 OutputDebugStringF）。"""
     logger = logging.getLogger(name)
     if logger.handlers:
         return logger
+    try:
+        # 日志里有中文；万一控制台的编码显示不了，就用 ? 代替，而不是抛异常
+        sys.stdout.reconfigure(errors="replace")
+    except (AttributeError, ValueError):
+        pass
     logger.setLevel(logging.DEBUG)
     fmt = logging.Formatter("%(asctime)s %(threadName)s %(message)s")
     sh = logging.StreamHandler(sys.stdout)

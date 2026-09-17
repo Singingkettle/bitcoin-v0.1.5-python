@@ -1,4 +1,4 @@
-"""COptionsDialog — v0.1.5 had exactly one setting: the transaction fee."""
+"""选项对话框——对应原版的 COptionsDialog。v0.1.5 里只有一个可设置项：交易手续费。"""
 
 from PySide6.QtWidgets import (
     QDialog,
@@ -16,13 +16,12 @@ class OptionsDialog(QDialog):
     def __init__(self, wallet, parent=None):
         super().__init__(parent)
         self.wallet = wallet
-        self.setWindowTitle("Options")
+        self.setWindowTitle("选项")
         grid = QGridLayout(self)
         grid.addWidget(QLabel(
-            "Optional transaction fee you give to the nodes that process "
-            "your transactions."), 0, 0, 1, 2)
-        grid.addWidget(QLabel("Transaction fee:"), 1, 0)
-        self.edit_fee = QLineEdit(format_money(int(wallet.settings.get("fee", 0))))
+            "可选的交易手续费：你自愿付给帮你打包交易的节点（矿工）的小费。"), 0, 0, 1, 2)
+        grid.addWidget(QLabel("交易手续费："), 1, 0)
+        self.edit_fee = QLineEdit(format_money(wallet.transaction_fee))
         grid.addWidget(self.edit_fee, 1, 1)
         box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         box.accepted.connect(self._save)
@@ -33,8 +32,7 @@ class OptionsDialog(QDialog):
         try:
             fee = parse_money(self.edit_fee.text())
         except ValueError:
-            QMessageBox.warning(self, "Options", "Error parsing amount")
+            QMessageBox.warning(self, "选项", "金额格式错误")
             return
-        self.wallet.settings["fee"] = fee
-        self.wallet.save()
+        self.wallet.set_transaction_fee(fee)
         self.accept()

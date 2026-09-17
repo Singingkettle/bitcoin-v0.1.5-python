@@ -1,12 +1,15 @@
-"""util.cpp's mapArgs / ReadConfigFile.
+"""命令行参数与配置文件——对应原版 util.cpp 的 mapArgs / ParseParameters。
 
-Recognised switches (same spelling as the original where it had them):
-  -datadir=<dir>   data directory (default: ./data/node)
-  -port=<n>        listen port (default 18444)
-  -connect=<ip[:port]>   connect ONLY to this node (repeatable)
-  -addnode=<ip[:port]>   also connect to this node (repeatable)
-  -nolisten        don't accept inbound connections
-  -gen             start generating coins immediately
+支持的参数（原版有的就沿用原版的写法）：
+  -datadir=<目录>        数据目录（默认 ./data/node）
+  -port=<端口>           监听端口（默认 18444）
+  -connect=<ip[:端口]>   启动后主动连接这个节点（可以写多个）
+  -addnode=<ip[:端口]>   同上（原版里两者略有区别，私网里等价）
+  -nolisten              不接受别人连进来
+  -gen                   启动后立刻开始挖矿
+
+数据目录下如果有 bitcoin.conf（每行一个 key=value），其中的配置作为默认值。
+原版靠 IRC 聊天频道自动发现其他节点；私网没有 IRC，节点之间靠上面的参数手动互连。
 """
 
 import os
@@ -22,7 +25,6 @@ class Config:
                 continue
             key, _, value = arg.lstrip("-").partition("=")
             self.map_args.setdefault(key, []).append(value)
-        # bitcoin.conf in the datadir provides defaults
         conf = os.path.join(self.datadir, "bitcoin.conf")
         if os.path.exists(conf):
             with open(conf, "r", encoding="utf-8") as f:

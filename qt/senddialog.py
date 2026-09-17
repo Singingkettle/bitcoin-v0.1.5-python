@@ -1,5 +1,5 @@
-"""CSendDialog. The From/Message fields of the original served IP-to-IP
-payments and were greyed out for bitcoin addresses — omitted here."""
+"""发送对话框——对应原版的 CSendDialog。
+原版还有"发件人 / 留言"两栏，那是给"按 IP 地址直接付款"用的，本项目没有实现该功能，故省略。"""
 
 from PySide6.QtWidgets import (
     QApplication,
@@ -13,7 +13,6 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 
-from bitcoin import base58
 from bitcoin.util import parse_money
 
 
@@ -21,32 +20,32 @@ class SendDialog(QDialog):
     def __init__(self, wallet, parent=None):
         super().__init__(parent)
         self.wallet = wallet
-        self.setWindowTitle("Send Coins")
-        self.setMinimumWidth(450)
+        self.setWindowTitle("发送比特币")
+        self.setMinimumWidth(480)
 
         grid = QGridLayout(self)
-        grid.addWidget(QLabel("Pay To:"), 0, 0)
+        grid.addWidget(QLabel("收款地址："), 0, 0)
         self.edit_address = QLineEdit()
         grid.addWidget(self.edit_address, 0, 1)
 
         buttons = QHBoxLayout()
-        btn_paste = QPushButton("&Paste")
+        btn_paste = QPushButton("粘贴(&P)")
         btn_paste.clicked.connect(self._paste)
-        btn_book = QPushButton("Address &Book...")
+        btn_book = QPushButton("地址簿(&B)...")
         btn_book.clicked.connect(self._pick_from_book)
         buttons.addWidget(btn_paste)
         buttons.addWidget(btn_book)
         buttons.addStretch()
         grid.addLayout(buttons, 1, 1)
 
-        grid.addWidget(QLabel("Amount:"), 2, 0)
+        grid.addWidget(QLabel("金额："), 2, 0)
         self.edit_amount = QLineEdit()
         self.edit_amount.setPlaceholderText("0.00")
         grid.addWidget(self.edit_amount, 2, 1)
 
         box = QDialogButtonBox()
-        self.btn_send = box.addButton("&Send", QDialogButtonBox.AcceptRole)
-        box.addButton(QDialogButtonBox.Cancel)
+        box.addButton("发送(&S)", QDialogButtonBox.AcceptRole)
+        box.addButton("取消", QDialogButtonBox.RejectRole)
         box.accepted.connect(self._send)
         box.rejected.connect(self.reject)
         grid.addWidget(box, 3, 0, 1, 2)
@@ -62,18 +61,14 @@ class SendDialog(QDialog):
             self.edit_address.setText(dialog.selected_address)
 
     def _send(self):
-        address = self.edit_address.text().strip()
-        if not base58.is_valid_address(address):
-            QMessageBox.warning(self, "Send Coins", "Invalid bitcoin address")
-            return
         try:
             amount = parse_money(self.edit_amount.text())
         except ValueError:
-            QMessageBox.warning(self, "Send Coins", "Error parsing amount")
+            QMessageBox.warning(self, "发送比特币", "金额格式错误")
             return
-        ok, result = self.wallet.send_money(address, amount)
+        ok, result = self.wallet.send_money(self.edit_address.text().strip(), amount)
         if not ok:
-            QMessageBox.warning(self, "Send Coins", result)
+            QMessageBox.warning(self, "发送比特币", result)
             return
-        QMessageBox.information(self, "Send Coins", "Payment sent!")
+        QMessageBox.information(self, "发送中...", "付款已发出")
         self.accept()
